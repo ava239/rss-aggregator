@@ -1,6 +1,6 @@
 import i18next from 'i18next';
 
-const handleForm = (stateValue) => {
+const handleFormState = (stateValue) => {
   const input = document.getElementById('url-input');
   const submit = document.querySelector('button[type="submit"]');
   input.classList.remove('is-invalid');
@@ -50,7 +50,7 @@ const render = (state, path, value) => {
 
   switch (path) {
     case 'form.state':
-      handleForm(value);
+      handleFormState(value);
       break;
     case 'form.message':
       renderMessage(value);

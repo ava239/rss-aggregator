@@ -5,9 +5,6 @@ yup.setLocale({
     url: 'mustBeUrl',
   },
 });
-const validate = (url) => {
-  const schema = yup.string().url().required();
-  return schema.validate(url);
-};
+const validate = (url) => yup.string().url().required().validate(url);
 
 export default validate;

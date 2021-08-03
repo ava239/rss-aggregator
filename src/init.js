@@ -27,6 +27,7 @@ export default () => i18next.init({
     watchedState.form.state = 'submitting';
 
     const formData = new FormData(e.target);
+    const url = formData.get('url');
     validate(formData.get('url')).catch(({ errors }) => {
       const [validationMessage] = errors;
       watchedState.form.state = 'failed';
@@ -36,7 +37,6 @@ export default () => i18next.init({
       };
       throw new Error('validation fail');
     }).then(() => {
-      const url = formData.get('url');
       const alreadyExists = state.feeds.find((feed) => feed.url === url);
 
       if (alreadyExists) {
@@ -47,12 +47,11 @@ export default () => i18next.init({
         };
         throw new Error('already exists');
       }
-
+    }).then(() => {
       const feed = { url };
 
       watchedState.feeds = [feed, ...watchedState.feeds];
-      return Promise.resolve();
-    }).then(() => {
+
       watchedState.form.state = 'submitted';
       watchedState.form.message = {
         type: 'success',
