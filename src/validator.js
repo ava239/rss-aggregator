@@ -2,7 +2,7 @@ import * as yup from 'yup';
 
 yup.setLocale({
   string: {
-    url: 'mustBeUrl',
+    url: 'must_be_url',
   },
 });
 const validate = (url) => yup.string().url().required().validate(url);

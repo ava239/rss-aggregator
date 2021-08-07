@@ -4,7 +4,6 @@ const handleFormState = (stateValue) => {
   const input = document.getElementById('url-input');
   const submit = document.querySelector('button[type="submit"]');
   input.classList.remove('is-invalid');
-  submit.textContent = i18next.t('add');
 
   switch (stateValue) {
     case 'filling':
@@ -16,6 +15,7 @@ const handleFormState = (stateValue) => {
     case 'submitting':
       submit.disabled = true;
       input.readOnly = true;
+      submit.textContent = i18next.t('submitting');
       break;
     case 'failed':
       submit.disabled = false;
@@ -44,6 +44,93 @@ const renderMessage = ({ type, text }) => {
   }
 };
 
+const buildFeedElement = ({ title, description }) => {
+  const li = document.createElement('li');
+  li.classList.add('list-group-item', 'border-0', 'border-end-0');
+
+  const feedTitle = document.createElement('h3');
+  feedTitle.classList.add('h6', 'm-0');
+  feedTitle.textContent = title;
+
+  const feedBody = document.createElement('p');
+  feedBody.classList.add('m-0', 'small', 'text-black-50');
+  feedBody.textContent = description;
+
+  li.append(feedTitle, feedBody);
+  return li;
+};
+
+const buildPostElement = ({ title, link, id }) => {
+  const li = document.createElement('li');
+  li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
+
+  const postLink = document.createElement('a');
+  postLink.classList.add('fw-normal', 'link-secondary');
+  postLink.textContent = title;
+  postLink.dataset.id = id;
+  postLink.target = '_blank';
+  postLink.rel = 'noopener noreferrer';
+  postLink.href = link;
+
+  const btn = document.createElement('button');
+  btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
+  btn.dataset.id = id;
+  btn.dataset.bsToggle = 'modal';
+  btn.dataset.bsTarget = '#modal';
+  btn.textContent = i18next.t('view');
+
+  li.append(postLink, btn);
+  return li;
+};
+
+const createCard = (title, content) => {
+  const card = document.createElement('div');
+  card.classList.add('card', 'border-0');
+  const cardBody = document.createElement('div');
+  cardBody.classList.add('card-body');
+
+  const blockTitle = document.createElement('h2');
+  blockTitle.textContent = title;
+
+  const ul = document.createElement('ul');
+  ul.classList.add('list-group', 'border-0', 'rounded-0');
+  ul.append(...content);
+
+  cardBody.append(blockTitle);
+  card.append(cardBody, ul);
+
+  return card;
+};
+
+const renderFeeds = (feeds) => {
+  if (feeds.length === 0) {
+    return;
+  }
+
+  const feedsContainer = document.querySelector('.feeds');
+  feedsContainer.innerHTML = '';
+
+  const listElements = feeds.map(buildFeedElement);
+
+  const card = createCard(i18next.t('feeds'), listElements);
+  feedsContainer.append(card);
+};
+
+const renderPosts = (posts) => {
+  if (posts.length === 0) {
+    return;
+  }
+
+  const postsContainer = document.querySelector('.posts');
+  postsContainer.innerHTML = '';
+
+  const listElements = posts.map(buildPostElement);
+
+  const card = createCard(i18next.t('posts'), listElements);
+
+  postsContainer.append(card);
+};
+
 const render = (state, path, value) => {
   const submit = document.querySelector('button[type="submit"]');
   submit.textContent = i18next.t('add');
@@ -54,6 +141,12 @@ const render = (state, path, value) => {
       break;
     case 'form.message':
       renderMessage(value);
+      break;
+    case 'feeds':
+      renderFeeds(value);
+      break;
+    case 'posts':
+      renderPosts(value, state);
       break;
     default:
       break;
