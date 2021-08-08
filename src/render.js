@@ -82,10 +82,9 @@ const buildPostElement = (post, state) => {
   const readPosts = target(state.readPosts);
   const isRead = readPosts.includes(post.id);
   const postLink = document.createElement('a');
-  postLink.classList.add(
-    isRead ? 'fw-normal' : 'fw-bold',
-    isRead ? 'link-secondary' : null,
-  );
+  const linkClasses = isRead ? ['fw-normal', 'link-secondary'] : ['fw-bold'];
+
+  postLink.classList.add(...linkClasses);
   postLink.textContent = post.title;
   postLink.dataset.id = post.id;
   postLink.target = '_blank';
@@ -98,6 +97,7 @@ const buildPostElement = (post, state) => {
   btn.dataset.bsToggle = 'modal';
   btn.dataset.bsTarget = '#modal';
   btn.textContent = i18next.t('view');
+
   btn.addEventListener('click', () => {
     state.readPosts = [...state.readPosts, post.id];
     const { link, title, description } = post;
@@ -105,6 +105,7 @@ const buildPostElement = (post, state) => {
   });
 
   li.append(postLink, btn);
+
   return li;
 };
 
