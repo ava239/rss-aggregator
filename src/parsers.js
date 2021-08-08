@@ -2,12 +2,7 @@ import _ from 'lodash';
 
 const parseRss = (rssData) => {
   const parser = new DOMParser();
-  const dom = parser.parseFromString(rssData, 'application/xml');
-
-  if (!dom.querySelector('rss')) {
-    throw new Error('parse_error');
-  }
-  return dom;
+  return parser.parseFromString(rssData, 'application/xml');
 };
 
 const buildFeed = (rssData, url) => {
@@ -24,6 +19,9 @@ const buildFeed = (rssData, url) => {
   };
 
   const rss = parseRss(rssData);
+  if (!rss.querySelector('rss')) {
+    throw new Error('parse_error');
+  }
 
   const title = rss.querySelector('channel > title').textContent;
   const description = rss.querySelector('channel > description').textContent.trim();
