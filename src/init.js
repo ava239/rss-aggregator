@@ -64,18 +64,18 @@ export default () => i18next.init({
     validate(formData.get('url'))
       .catch(({ errors }) => {
         const [validationMessage] = errors;
-        throw new Error(validationMessage);
+        throw Error(validationMessage);
       })
       .then(() => {
         const alreadyExists = state.feeds.find((feed) => feed.url === url);
         if (alreadyExists) {
-          throw new Error('already_exists');
+          throw Error('already_exists');
         }
       })
       .then(() => axios.get(proxy, { params: { url, ...axiosConfig } }))
       .catch((err) => {
         if (err.isAxiosError) {
-          throw new Error('network_error');
+          throw Error('network_error');
         }
         throw err;
       })

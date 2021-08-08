@@ -20,7 +20,7 @@ const buildFeed = (rssData, url) => {
 
   const rss = parseRss(rssData);
   if (!rss.querySelector('rss')) {
-    throw new Error('parse_error');
+    throw Error('parse_error');
   }
 
   const title = rss.querySelector('channel > title').textContent;
