@@ -1,30 +1,45 @@
+/* eslint-disable no-param-reassign */
 import i18next from 'i18next';
+import { target } from 'on-change';
 
-const handleFormState = (stateValue) => {
+const handleFormState = (value) => {
   const input = document.getElementById('url-input');
-  const submit = document.querySelector('button[type="submit"]');
   input.classList.remove('is-invalid');
 
-  switch (stateValue) {
+  const submitBtn = document.querySelector('button[type="submit"]');
+  submitBtn.textContent = i18next.t('add');
+
+  switch (value) {
     case 'filling':
     case 'submitted':
-      submit.disabled = false;
+      submitBtn.disabled = false;
       input.value = '';
       input.readOnly = false;
       break;
     case 'submitting':
-      submit.disabled = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = i18next.t('submitting');
       input.readOnly = true;
-      submit.textContent = i18next.t('submitting');
       break;
     case 'failed':
-      submit.disabled = false;
+      submitBtn.disabled = false;
       input.readOnly = false;
       input.classList.add('is-invalid');
       break;
     default:
-      throw Error(`Unknown state: ${stateValue}`);
+      throw Error(`Unknown state: ${value}`);
   }
+};
+
+const handleModal = ({ title, description, link }) => {
+  const titleElement = document.querySelector('.modal .modal-title');
+  titleElement.textContent = title;
+
+  const bodyElement = document.querySelector('.modal .modal-body');
+  bodyElement.textContent = description;
+
+  const linkElement = document.querySelector('.modal .full-article');
+  linkElement.href = link;
 };
 
 const renderMessage = ({ type, text }) => {
@@ -60,32 +75,47 @@ const buildFeedElement = ({ title, description }) => {
   return li;
 };
 
-const buildPostElement = ({ title, link, id }) => {
+const buildPostElement = (post, state) => {
+  const readPosts = target(state.readPosts);
+
   const li = document.createElement('li');
   li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
+  const isRead = readPosts.includes(post.id);
+
   const postLink = document.createElement('a');
-  postLink.classList.add('fw-normal', 'link-secondary');
-  postLink.textContent = title;
-  postLink.dataset.id = id;
+  postLink.classList.add(
+    isRead ? 'fw-normal' : 'fw-bold',
+    isRead ? 'link-secondary' : null,
+  );
+  postLink.textContent = post.title;
+  postLink.dataset.id = post.id;
   postLink.target = '_blank';
   postLink.rel = 'noopener noreferrer';
-  postLink.href = link;
+  postLink.href = post.link;
 
   const btn = document.createElement('button');
   btn.classList.add('btn', 'btn-outline-primary', 'btn-sm');
-  btn.dataset.id = id;
+  btn.dataset.id = post.id;
   btn.dataset.bsToggle = 'modal';
   btn.dataset.bsTarget = '#modal';
   btn.textContent = i18next.t('view');
 
+  btn.addEventListener('click', () => {
+    state.readPosts = [...state.readPosts, post.id];
+    const { link, title, description } = post;
+    state.modal = { title, description, link };
+  });
+
   li.append(postLink, btn);
+
   return li;
 };
 
-const createCard = (title, content) => {
+const buildCard = (title, content) => {
   const card = document.createElement('div');
   card.classList.add('card', 'border-0');
+
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body');
 
@@ -112,11 +142,11 @@ const renderFeeds = (feeds) => {
 
   const listElements = feeds.map(buildFeedElement);
 
-  const card = createCard(i18next.t('feeds'), listElements);
+  const card = buildCard(i18next.t('feeds'), listElements);
   feedsContainer.append(card);
 };
 
-const renderPosts = (posts) => {
+const renderPosts = (posts, state) => {
   if (posts.length === 0) {
     return;
   }
@@ -124,17 +154,13 @@ const renderPosts = (posts) => {
   const postsContainer = document.querySelector('.posts');
   postsContainer.innerHTML = '';
 
-  const listElements = posts.map(buildPostElement);
+  const listElements = posts.map((post) => buildPostElement(post, state));
 
-  const card = createCard(i18next.t('posts'), listElements);
-
+  const card = buildCard(i18next.t('posts'), listElements);
   postsContainer.append(card);
 };
 
 const render = (state, path, value) => {
-  const submit = document.querySelector('button[type="submit"]');
-  submit.textContent = i18next.t('add');
-
   switch (path) {
     case 'form.state':
       handleFormState(value);
@@ -147,6 +173,12 @@ const render = (state, path, value) => {
       break;
     case 'posts':
       renderPosts(value, state);
+      break;
+    case 'modal':
+      handleModal(value);
+      break;
+    case 'readPosts':
+      renderPosts(target(state.posts), state);
       break;
     default:
       break;

@@ -1,9 +1,9 @@
 /* eslint-disable no-param-reassign */
+import axios from 'axios';
+import 'bootstrap';
 import i18next from 'i18next';
 import onChange from 'on-change';
-import axios from 'axios';
-import _ from 'lodash';
-import parseRss from './parser';
+import buildFeed from './parsers';
 import render from './render';
 import resources from './i18n';
 import validate from './validator';
@@ -11,32 +11,11 @@ import validate from './validator';
 const proxy = 'https://hexlet-allorigins.herokuapp.com/get';
 const axiosConfig = { disableCache: true };
 
-const buildFeed = (rss, url) => {
-  const buildItem = (item) => {
-    const title = item.querySelector('title').textContent;
-    const link = item.querySelector('link').textContent;
-    const description = item.querySelector('description').textContent;
-    const guid = item.querySelector('guid');
-    const id = _.uniqueId();
-
-    return {
-      title, description, link, guid, id,
-    };
-  };
-
-  const title = rss.querySelector('channel > title').textContent;
-  const description = rss.querySelector('channel > description').textContent.trim();
-  const posts = Array.from(rss.querySelectorAll('channel > item')).map(buildItem);
-
-  return { feed: { title, description, url }, posts };
-};
-
 const loadPosts = (state, feed) => {
   const { url } = feed;
   axios.get(proxy, { params: { url, ...axiosConfig } })
     .then((result) => {
-      const feedData = parseRss(result.data.contents);
-      const { posts } = buildFeed(feedData, url);
+      const { posts } = buildFeed(result.data.contents, url);
       const currentIds = state.posts.map((post) => post.link);
       const newPosts = posts.filter((post) => !currentIds.includes(post.link));
 
@@ -60,12 +39,20 @@ export default () => i18next.init({
         type: null,
         text: '',
       },
-      state: 'filling',
+      state: '',
+    },
+    modal: {
+      title: '',
+      body: '',
+      link: '',
     },
     feeds: [],
     posts: [],
+    readPosts: [],
   };
   const watchedState = onChange(state, (path, value) => render(watchedState, path, value));
+  watchedState.form.state = 'filling';
+
   const form = document.querySelector('form');
 
   form.addEventListener('submit', (e) => {
@@ -93,8 +80,7 @@ export default () => i18next.init({
         throw err;
       })
       .then((result) => {
-        const feedData = parseRss(result.data.contents);
-        const { feed, posts } = buildFeed(feedData, url);
+        const { feed, posts } = buildFeed(result.data.contents, url);
         watchedState.feeds = [feed, ...watchedState.feeds];
         watchedState.posts = [...posts, ...watchedState.posts];
         watchedState.form.state = 'submitted';
