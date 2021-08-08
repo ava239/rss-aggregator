@@ -1,13 +1,15 @@
+/* eslint-disable no-param-reassign */
 import i18next from 'i18next';
 import onChange from 'on-change';
 import axios from 'axios';
-import lodash from 'lodash';
+import _ from 'lodash';
 import parseRss from './parser';
 import render from './render';
 import resources from './i18n';
 import validate from './validator';
 
 const proxy = 'https://hexlet-allorigins.herokuapp.com/get';
+const axiosConfig = { disableCache: true };
 
 const buildFeed = (rss, url) => {
   const buildItem = (item) => {
@@ -15,7 +17,7 @@ const buildFeed = (rss, url) => {
     const link = item.querySelector('link').textContent;
     const description = item.querySelector('description').textContent;
     const guid = item.querySelector('guid');
-    const id = lodash.uniqueId();
+    const id = _.uniqueId();
 
     return {
       title, description, link, guid, id,
@@ -27,6 +29,24 @@ const buildFeed = (rss, url) => {
   const posts = Array.from(rss.querySelectorAll('channel > item')).map(buildItem);
 
   return { feed: { title, description, url }, posts };
+};
+
+const loadPosts = (state, feed) => {
+  const { url } = feed;
+  axios.get(proxy, { params: { url, ...axiosConfig } })
+    .then((result) => {
+      const feedData = parseRss(result.data.contents);
+      const { posts } = buildFeed(feedData, url);
+      const currentIds = state.posts.map((post) => post.link);
+      const newPosts = posts.filter((post) => !currentIds.includes(post.link));
+
+      if (newPosts.length === 0) {
+        return;
+      }
+
+      state.posts = [...newPosts, ...state.posts];
+    });
+  setTimeout(() => loadPosts(state, feed), 5000);
 };
 
 export default () => i18next.init({
@@ -65,7 +85,7 @@ export default () => i18next.init({
           throw new Error('already_exists');
         }
       })
-      .then(() => axios.get(proxy, { params: { url, disableCache: 'true' } }))
+      .then(() => axios.get(proxy, { params: { url, ...axiosConfig } }))
       .catch((err) => {
         if (err.isAxiosError) {
           throw new Error('network_error');
@@ -80,8 +100,9 @@ export default () => i18next.init({
         watchedState.form.state = 'submitted';
         watchedState.form.message = {
           type: 'success',
-          text: 'success_load',
+          text: 'successfully_loaded',
         };
+        setTimeout(() => loadPosts(watchedState, feed), 5000);
       })
       .catch((error) => {
         watchedState.form.state = 'failed';
