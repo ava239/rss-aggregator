@@ -96,7 +96,6 @@ export default () => i18next.init({
           type: 'error',
           text: error.message,
         };
-        throw error;
       });
   });
 
