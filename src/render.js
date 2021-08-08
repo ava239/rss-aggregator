@@ -76,13 +76,11 @@ const buildFeedElement = ({ title, description }) => {
 };
 
 const buildPostElement = (post, state) => {
-  const readPosts = target(state.readPosts);
-
   const li = document.createElement('li');
   li.classList.add('list-group-item', 'd-flex', 'justify-content-between', 'align-items-start', 'border-0', 'border-end-0');
 
+  const readPosts = target(state.readPosts);
   const isRead = readPosts.includes(post.id);
-
   const postLink = document.createElement('a');
   postLink.classList.add(
     isRead ? 'fw-normal' : 'fw-bold',
@@ -100,7 +98,6 @@ const buildPostElement = (post, state) => {
   btn.dataset.bsToggle = 'modal';
   btn.dataset.bsTarget = '#modal';
   btn.textContent = i18next.t('view');
-
   btn.addEventListener('click', () => {
     state.readPosts = [...state.readPosts, post.id];
     const { link, title, description } = post;
@@ -108,7 +105,6 @@ const buildPostElement = (post, state) => {
   });
 
   li.append(postLink, btn);
-
   return li;
 };
 
