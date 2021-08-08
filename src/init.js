@@ -16,8 +16,8 @@ const loadPosts = (state, feed) => {
   axios.get(proxy, { params: { url, ...axiosConfig } })
     .then((result) => {
       const { posts } = buildFeed(result.data.contents, url);
-      const currentIds = state.posts.map((post) => post.link);
-      const newPosts = posts.filter((post) => !currentIds.includes(post.link));
+      const currentLinks = state.posts.map(({ link }) => link);
+      const newPosts = posts.filter(({ link }) => !currentLinks.includes(link));
 
       if (newPosts.length === 0) {
         return;
